@@ -195,14 +195,15 @@
     let isRegisterMode = false;
     let allMeasurements = [];
 
+    const DEFAULT_SUPABASE_URL = "https://oyzqrhukwqupsmgcltlf.supabase.co";
+    const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95enFyaHVrd3F1cHNtZ2NsdGxmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2MzQ0OTYsImV4cCI6MjEwNjIxMDQ5Nn0.pVd6_L_NwZVgE0H42THHdkNvpYmTA1NZSxD9do9A8B0";
+
     window.addEventListener('DOMContentLoaded', () => {
-      const savedUrl = localStorage.getItem('supabase_url') || '';
-      const savedKey = localStorage.getItem('supabase_key') || '';
-      if (savedUrl && savedKey) {
-        document.getElementById('cfg-url').value = savedUrl;
-        document.getElementById('cfg-key').value = savedKey;
-        initSupabase(savedUrl, savedKey);
-      }
+      const savedUrl = localStorage.getItem('supabase_url') || DEFAULT_SUPABASE_URL;
+      const savedKey = localStorage.getItem('supabase_key') || DEFAULT_SUPABASE_KEY;
+      document.getElementById('cfg-url').value = savedUrl;
+      document.getElementById('cfg-key').value = savedKey;
+      initSupabase(savedUrl, savedKey);
 
       // Prefill fecha/hora actual en modal
       const now = new Date();
