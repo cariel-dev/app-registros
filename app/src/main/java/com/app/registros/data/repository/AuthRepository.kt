@@ -6,20 +6,30 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.user.UserInfo
 
 /**
- * Repositorio de autenticación que gestiona el registro, login y sesiones
- * utilizando Supabase Auth.
+ * Repositorio de autenticación simplificada (Usuario + Contraseña).
+ * Elimina la fricción de solicitar correos o confirmaciones de email al usuario.
  */
 class AuthRepository {
 
     private val auth = SupabaseProvider.client.auth
 
     /**
-     * Registra un nuevo usuario con correo y contraseña.
+     * Convierte el nombre de usuario ingresado en una identidad compatible con Supabase Auth.
+     * Ejemplo: "hugo" -> "hugo@appregistros.local"
      */
-    suspend fun signUp(email: String, pass: String): Result<Unit> {
+    private fun toInternalEmail(username: String): String {
+        val sanitized = username.trim().lowercase().replace(" ", "_")
+        return "$sanitized@appregistros.local"
+    }
+
+    /**
+     * Registra un nuevo usuario usando únicamente su nombre de usuario y contraseña.
+     */
+    suspend fun signUp(username: String, pass: String): Result<Unit> {
         return try {
+            val internalEmail = toInternalEmail(username)
             auth.signUpWith(Email) {
-                this.email = email
+                this.email = internalEmail
                 this.password = pass
             }
             Result.success(Unit)
@@ -29,12 +39,13 @@ class AuthRepository {
     }
 
     /**
-     * Inicia sesión con correo y contraseña.
+     * Inicia sesión usando únicamente su nombre de usuario y contraseña.
      */
-    suspend fun signIn(email: String, pass: String): Result<Unit> {
+    suspend fun signIn(username: String, pass: String): Result<Unit> {
         return try {
+            val internalEmail = toInternalEmail(username)
             auth.signInWith(Email) {
-                this.email = email
+                this.email = internalEmail
                 this.password = pass
             }
             Result.success(Unit)
@@ -56,15 +67,17 @@ class AuthRepository {
     }
 
     /**
-     * Retorna la información del usuario autenticado o null si no hay sesión.
+     * Retorna el nombre de usuario actual sin el sufijo interno.
      */
-    fun getCurrentUser(): UserInfo? {
-        return auth.currentUserOrNull()
+    fun getCurrentUsername(): String? {
+        val email = auth.currentUserOrNull()?.email ?: return null
+        return email.substringBefore("@")
     }
 
-    /**
-     * Verifica si hay una sesión activa.
-     */
+    fun getCurrentUserId(): String? {
+        return auth.currentUserOrNull()?.id
+    }
+
     fun isUserLoggedIn(): Boolean {
         return auth.currentUserOrNull() != null
     }

@@ -1,82 +1,80 @@
-# 📱 App Registros: Android Nativo + Base de Datos Portable (Supabase/PostgreSQL) + Portal Web
+# 🏋️‍♂️ App de Medidas Corporales, Peso y Plicometría (Android Nativo + Offline-First + Web)
 
-Este proyecto implementa la arquitectura completa solicitada:
-1. **App Móvil Nativa en Android:** Desarrollada con **Kotlin** y **Jetpack Compose**, arquitectura moderna (MVVM + Clean Architecture) y cliente oficial de Supabase.
-2. **Base de Datos Portable (PostgreSQL / Supabase):** Cero ataduras (Zero Lock-in), exportación de datos en 1 clic (CSV, JSON, volcado SQL), autenticación segura y políticas RLS para privacidad.
-3. **Portal Web Sincronizado:** Permite iniciar sesión con la misma cuenta de la app móvil para consultar, agregar o exportar los registros desde cualquier navegador web.
+Aplicación móvil nativa en **Android (Kotlin + Jetpack Compose)** y portal web complementario para el seguimiento detallado de composición corporal y antropometría:
+* **Peso y Fecha/Hora exacta:** Registro preciso con marcas de tiempo.
+* **Circunferencias en centímetros (cm):** Cuello, hombros, pecho, cintura, cadera, bíceps (izq/der), antebrazos (izq/der), muslos (izq/der) y pantorrillas (izq/der).
+* **Plicometría / Pliegues cutáneos (mm):** Tríceps, subescapular, suprailíaco, abdominal, muslo anterior, pectoral y axilar medio.
+* **Cálculo automático de grasa corporal (%):** Estimación en tiempo real mediante la fórmula Jackson-Pollock.
+* **Arquitectura Offline-First:** Los datos se guardan **de inmediato en el teléfono (Room DB / SQLite)** sin importar si tienes internet o no. En cuanto el teléfono detecta señal Wi-Fi o datos móviles, se sincroniza en segundo plano con **Supabase (PostgreSQL)**.
+* **Login Simple (Sin correos):** Solo necesitas crear un **Nombre de Usuario** y una **Contraseña**, sin pedir correos ni enlaces de verificación.
+* **Portabilidad Total:** Exporta todas tus mediciones con un clic a **CSV (Excel / Google Sheets)** o **JSON**.
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📁 Estructura del Código
 
 ```
 app-registros/
-├── app/                                # Código fuente de la app nativa Android
-│   ├── src/main/
-│   │   ├── AndroidManifest.xml
-│   │   ├── java/com/app/registros/
-│   │   │   ├── MainActivity.kt
-│   │   │   ├── AppRegistrosApplication.kt
-│   │   │   ├── data/
-│   │   │   │   ├── model/Record.kt     # Modelo de datos serializable
-│   │   │   │   ├── remote/SupabaseProvider.kt # Conexión a Supabase
-│   │   │   │   └── repository/         # Lógica de datos (Auth y Registros)
-│   │   │   └── ui/
-│   │   │       ├── theme/              # Diseño Material 3
-│   │   │       ├── navigation/         # Enrutamiento de pantallas
-│   │   │       └── screens/            # Pantallas (Login, Registros, Exportar)
-│   │   └── res/values/                 # Strings, colores y estilos
-│   └── build.gradle.kts                # Dependencias Compose y Supabase
+├── app/src/main/java/com/app/registros/
+│   ├── MainActivity.kt                 # Actividad principal Single-Activity (Compose)
+│   ├── AppRegistrosApplication.kt      # Inicialización de la aplicación Android
+│   ├── data/
+│   │   ├── local/                      # Base de datos local SQLite (Room)
+│   │   │   ├── AppDatabase.kt          # Instancia Room DB en el teléfono
+│   │   │   ├── MeasurementEntity.kt    # Entidad de medidas con flags de sync
+│   │   │   └── MeasurementDao.kt       # Consultas locales rápidas
+│   │   ├── model/
+│   │   │   └── BodyMeasurement.kt      # Modelo de dominio serializable con Jackson-Pollock
+│   │   ├── remote/
+│   │   │   └── SupabaseProvider.kt     # Conexión al backend PostgreSQL de Supabase
+│   │   ├── repository/
+│   │   │   ├── AuthRepository.kt       # Autenticación directa por usuario y contraseña
+│   │   │   └── MeasurementRepository.kt# Repositorio Offline-First
+│   │   └── sync/
+│   │       └── SyncManager.kt          # Sincronizador de red automático teléfono ↔ nube
+│   └── ui/
+│       ├── navigation/                 # Rutas declarativas (Screen y AppNavigation)
+│       ├── theme/                      # Paleta atlética moderna (Deep Slate & Emerald)
+│       └── screens/
+│           ├── auth/                   # Login y Registro por usuario/contraseña
+│           ├── measurements/           # Historial, badges de sincronización y formulario
+│           └── export/                 # Exportación instantánea a CSV y compartir
 ├── supabase/
-│   └── schema.sql                      # Script SQL listo para crear tablas y seguridad RLS
+│   └── schema.sql                      # Tablas PostgreSQL, tipos precisos y seguridad RLS
 ├── web/
-│   └── index.html                      # Portal web para consultar y exportar datos vía navegador
-├── build.gradle.kts                    # Configuración raíz de Gradle
-├── settings.gradle.kts
+│   └── index.html                      # Portal web para consultar y registrar medidas desde el PC
 └── README.md
 ```
 
 ---
 
-## 🚀 Guía de Puesta en Marcha Paso a Paso
+## 🚀 Puesta en Marcha Rápida
 
-### Paso 1: Crear tu Base de Datos en Supabase (Gratis)
-1. Entra a [https://supabase.com](https://supabase.com) y crea una cuenta gratuita.
-2. Haz clic en **"New Project"** y dale un nombre (por ejemplo, `app-registros`).
-3. Ve a la sección **SQL Editor** en el menú lateral izquierdo.
-4. Abre el archivo local [`supabase/schema.sql`](supabase/schema.sql), copia todo su contenido, pégalo en el editor SQL de Supabase y presiona **"Run"**.
-   * *Esto creará la tabla `registros`, los índices automáticos y las políticas de seguridad (RLS).*
-5. Ve a **Project Settings** (el icono de engranaje) -> **API**.
-6. Copia dos datos:
-   * **Project URL** (ejemplo: `https://xyzabcdef.supabase.co`)
-   * **Project API keys: `anon` `public`**
+### 1. Configurar la Base de Datos en Supabase (Gratis)
+1. Entra a [https://supabase.com](https://supabase.com) y crea tu proyecto.
+2. Abre la pestaña **SQL Editor** en el menú de Supabase.
+3. Copia todo el contenido de [`supabase/schema.sql`](supabase/schema.sql), pégalo en el editor y haz clic en **Run**.
+   * *Esto creará la tabla `mediciones_corporales` con todos los campos métricos y las políticas de seguridad (RLS).*
+4. En Supabase ve a **Authentication** -> **Providers** -> **Email**:
+   * Desmarca la casilla **"Confirm email"** para que los usuarios puedan iniciar sesión de inmediato sin verificar correos.
+5. Ve a **Project Settings** -> **API** y copia tu **Project URL** y tu **Anon Key**.
 
 ---
 
-### Paso 2: Probar el Portal Web (Inmediato)
-Puedes probar tu base de datos y la sincronización web sin esperar a compilar la app móvil:
-1. Abre el archivo [`web/index.html`](web/index.html) directamente en tu navegador (doble clic o ejecútalo con `xdg-open web/index.html`).
-2. En la barra superior, pega tu **URL** y **Anon Key** de Supabase y haz clic en "Conectar Supabase".
-3. Regístrate con un correo y contraseña de prueba.
-4. ¡Listo! Ya puedes agregar registros, borrarlos y probar los botones **"Exportar CSV"** o **"Exportar JSON"**.
+### 2. Probar el Portal Web Inmediatamente
+Puedes usar y probar la aplicación web desde tu navegador de inmediato:
+1. Abre [`web/index.html`](web/index.html) en tu navegador.
+2. Pega tu URL y Anon Key de Supabase en la barra superior.
+3. Haz clic en **"Crear cuenta (sin correo)"**, escribe tu usuario (ej. `hugo_fit`) y tu contraseña.
+4. Agrega una medición con peso, cintura y pliegues.
+5. Prueba el botón **"Exportar CSV"** para descargar tu hoja de cálculo.
 
 ---
 
-### Paso 3: Configurar la App Nativa en Android
+### 3. Abrir y Ejecutar la App Móvil Android
 1. Abre [`app/src/main/java/com/app/registros/data/remote/SupabaseProvider.kt`](app/src/main/java/com/app/registros/data/remote/SupabaseProvider.kt).
-2. Reemplaza `SUPABASE_URL` y `SUPABASE_ANON_KEY` con tus claves reales.
+2. Pega tu `SUPABASE_URL` y `SUPABASE_ANON_KEY`.
 3. Abre esta carpeta (`/home/hugo/dev/app-registros`) en **Android Studio**.
-4. Deja que Gradle descargue las dependencias y sincronice el proyecto.
-5. Conecta tu teléfono Android (o usa el emulador) y presiona **Run (▶️)**.
-
----
-
-## 🔒 ¿Cómo se garantiza la portabilidad de los datos?
-
-1. **Desde la App Móvil:**
-   - La app incluye una pantalla dedicada **"Exportar Datos"** que genera al instante un archivo CSV estándar y permite copiarlo o compartirlo a WhatsApp, Drive o Correo.
-2. **Desde el Portal Web:**
-   - Botones de 1 clic para descargar en formato **CSV (Excel/Sheets)** o **JSON**.
-3. **Desde Supabase / PostgreSQL:**
-   - Puedes ir a la consola de Supabase -> `Table Editor` -> `Export` y descargar todo en un instante.
-   - Si en el futuro quieres migrar a AWS, Google Cloud, DigitalOcean o tu propio servidor, puedes descargar el volcado SQL completo (`pg_dump`) y cargarlo en cualquier base de datos PostgreSQL estándar sin cambiar ni una sola línea de tus modelos.
+4. Conecta tu teléfono Android o inicia el emulador y presiona **Run (▶️)**.
+5. Inicia sesión con el mismo usuario.
+6. **Prueba Offline:** Apaga el Wi-Fi y los datos móviles de tu teléfono. Registra una medición. Verás que se guarda de inmediato con la etiqueta `📱 En teléfono`. Vuelve a activar el internet y verás cómo el icono cambia automáticamente a `☁️ En nube` y se refleja en el portal web.

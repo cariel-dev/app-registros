@@ -3,8 +3,8 @@ package com.app.registros.ui.screens.auth
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
@@ -26,7 +26,7 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -39,7 +39,7 @@ fun LoginScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("App Registros", fontWeight = FontWeight.Bold) }
+                title = { Text("App Medidas & Plicometría", fontWeight = FontWeight.Bold) }
             )
         }
     ) { padding ->
@@ -54,22 +54,26 @@ fun LoginScreen(
             Text(
                 text = "Iniciar Sesión",
                 style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Tus datos se sincronizan con PostgreSQL en Supabase",
+                text = "Accede a tus medidas corporales (funciona 100% offline)",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
             )
 
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo Electrónico") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                value = username,
+                onValueChange = {
+                    username = it
+                    viewModel.clearError()
+                },
+                label = { Text("Nombre de Usuario") },
+                placeholder = { Text("ej. hugo_fit") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -77,14 +81,17 @@ fun LoginScreen(
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = {
+                    password = it
+                    viewModel.clearError()
+                },
                 label = { Text("Contraseña") },
                 leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = "Alternar visibilidad"
+                            contentDescription = "Mostrar contraseña"
                         )
                     }
                 },
@@ -106,7 +113,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.signIn(email, password) },
+                onClick = { viewModel.signIn(username, password) },
                 enabled = !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,7 +132,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             TextButton(onClick = onNavigateToRegister) {
-                Text("¿No tienes cuenta? Regístrate aquí")
+                Text("¿Nuevo usuario? Crea tu cuenta aquí (sin correos)")
             }
         }
     }

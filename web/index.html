@@ -3,166 +3,188 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>App Registros - Portal Web</title>
-  <!-- Tailwind CSS CDN para diseño moderno y responsive -->
+  <title>Portal Web - Medidas Corporales & Plicometría</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Supabase JS SDK Oficial desde CDN -->
+  <!-- Supabase JS SDK Oficial -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body { font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
 
-  <div class="max-w-4xl mx-auto px-4 py-8">
+  <div class="max-w-6xl mx-auto px-4 py-8">
     <!-- Header -->
-    <header class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+    <header class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 mb-8 border-b border-slate-800 gap-4">
       <div>
-        <h1 class="text-3xl font-extrabold text-blue-600 flex items-center gap-2">
-          <span>📱↔️💻</span> App Registros (Web)
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-emerald-400 flex items-center gap-2">
+          <span>💪 📏</span> Medidas & Plicometría
         </h1>
-        <p class="text-sm text-slate-500 mt-1">Conectado a la misma base de datos Supabase que la app móvil</p>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">Portal web sincronizado en tiempo real con tu app móvil Android</p>
       </div>
       <div id="user-section" class="hidden items-center gap-3">
-        <span id="user-email" class="text-xs bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full font-mono"></span>
-        <button onclick="handleSignOut()" class="text-xs bg-red-100 hover:bg-red-200 text-red-700 font-semibold px-3 py-1.5 rounded-lg transition">
+        <span class="text-xs text-slate-400">Usuario:</span>
+        <span id="user-display" class="text-xs bg-slate-800 text-emerald-400 px-3 py-1.5 rounded-full font-bold border border-slate-700"></span>
+        <button onclick="handleSignOut()" class="text-xs bg-red-950/60 hover:bg-red-900 text-red-300 font-semibold px-3 py-1.5 rounded-lg border border-red-800/50 transition">
           Cerrar sesión
         </button>
       </div>
     </header>
 
-    <!-- Configuración rápida de Supabase -->
-    <div id="config-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-amber-900">
-      <div class="font-bold flex items-center gap-2 mb-1">
-        <span>⚙️</span> Configura tus claves de Supabase
+    <!-- Configuración de Supabase -->
+    <div id="config-banner" class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 mb-6 text-sm text-slate-300">
+      <div class="font-bold text-emerald-400 flex items-center gap-2 mb-1">
+        <span>⚙️</span> Conexión Supabase (PostgreSQL)
       </div>
-      <p class="text-xs text-amber-800 mb-3">Ingresa la URL y Anon Key de tu proyecto Supabase para conectar este portal con tu base de datos:</p>
+      <p class="text-xs text-slate-400 mb-3">Ingresa la URL y Anon Key de tu proyecto Supabase para enlazar la base de datos:</p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
-        <input id="cfg-url" type="text" placeholder="https://xyz.supabase.co" class="px-3 py-1.5 border rounded text-xs w-full bg-white" />
-        <input id="cfg-key" type="password" placeholder="Tu Supabase anon public key" class="px-3 py-1.5 border rounded text-xs w-full bg-white" />
+        <input id="cfg-url" type="text" placeholder="https://xyz.supabase.co" class="px-3 py-1.5 border border-slate-600 rounded text-xs w-full bg-slate-900 text-slate-100" />
+        <input id="cfg-key" type="password" placeholder="Tu Supabase anon public key" class="px-3 py-1.5 border border-slate-600 rounded text-xs w-full bg-slate-900 text-slate-100" />
       </div>
-      <button onclick="saveSupabaseConfig()" class="bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold px-4 py-1.5 rounded transition">
-        Conectar Supabase
+      <button onclick="saveSupabaseConfig()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-1.5 rounded transition">
+        Conectar Base de Datos
       </button>
     </div>
 
-    <!-- SECCIÓN 1: LOGIN / REGISTRO -->
-    <section id="auth-box" class="max-w-md mx-auto bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mt-12">
-      <h2 id="auth-title" class="text-xl font-bold text-slate-800 mb-1">Iniciar Sesión</h2>
-      <p class="text-xs text-slate-500 mb-5">Accede con el mismo correo y contraseña de tu app móvil</p>
+    <!-- SECCIÓN DE LOGIN / REGISTRO (SIN CORREO) -->
+    <section id="auth-box" class="max-w-md mx-auto bg-slate-800/90 p-6 rounded-2xl shadow-xl border border-slate-700 mt-12">
+      <h2 id="auth-title" class="text-xl font-bold text-slate-100 mb-1">Iniciar Sesión</h2>
+      <p class="text-xs text-slate-400 mb-5">Ingresa tu usuario y contraseña (los mismos de tu teléfono)</p>
 
       <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Correo electrónico</label>
-          <input id="auth-email" type="email" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="ejemplo@correo.com" />
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Nombre de Usuario</label>
+          <input id="auth-username" type="text" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="ej. hugo_fit" />
         </div>
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Contraseña</label>
-          <input id="auth-password" type="password" required minlength="6" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Mínimo 6 caracteres" />
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Contraseña</label>
+          <input id="auth-password" type="password" required minlength="6" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100 focus:ring-2 focus:ring-emerald-500 focus:outline-none" placeholder="Mínimo 6 caracteres" />
         </div>
 
-        <div id="auth-error" class="hidden text-xs text-red-600 bg-red-50 p-2.5 rounded border border-red-200"></div>
+        <div id="auth-error" class="hidden text-xs text-red-400 bg-red-950/60 p-2.5 rounded border border-red-800"></div>
 
-        <button type="submit" id="auth-submit-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg text-sm transition">
+        <button type="submit" id="auth-submit-btn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium py-2 rounded-lg text-sm transition">
           Ingresar
         </button>
       </form>
 
-      <div class="mt-4 pt-4 border-t border-slate-100 text-center text-xs text-slate-500">
-        <span id="toggle-auth-text">¿No tienes cuenta?</span>
-        <button onclick="toggleAuthMode()" id="toggle-auth-btn" class="text-blue-600 hover:underline font-semibold ml-1">
-          Regístrate aquí
+      <div class="mt-4 pt-4 border-t border-slate-700 text-center text-xs text-slate-400">
+        <span id="toggle-auth-text">¿No tienes cuenta aún?</span>
+        <button onclick="toggleAuthMode()" id="toggle-auth-btn" class="text-emerald-400 hover:underline font-semibold ml-1">
+          Crear cuenta (sin correo)
         </button>
       </div>
     </section>
 
-    <!-- SECCIÓN 2: DASHBOARD DE REGISTROS -->
+    <!-- SECCIÓN DASHBOARD DE MEDICIONES -->
     <section id="dashboard" class="hidden space-y-6">
-      <!-- Acciones y Filtros -->
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-200">
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <input id="search-input" oninput="filterRecords()" type="text" placeholder="Buscar registros..." class="px-3 py-1.5 border rounded-lg text-sm w-full sm:w-64 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <select id="category-filter" onchange="filterRecords()" class="px-3 py-1.5 border rounded-lg text-sm bg-white text-slate-700">
-            <option value="Todas">Todas las categorías</option>
-            <option value="General">General</option>
-            <option value="Finanzas">Finanzas</option>
-            <option value="Trabajo">Trabajo</option>
-            <option value="Personal">Personal</option>
-          </select>
+      <!-- Acciones de Cabecera -->
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-800/80 p-4 rounded-xl border border-slate-700">
+        <div class="text-xs text-slate-400">
+          Mostrando <span id="count-badge" class="font-bold text-emerald-400">0</span> registros corporales
         </div>
 
         <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button onclick="exportToCsv()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-lg border border-slate-300 transition flex items-center gap-1">
-            <span>📥</span> Exportar CSV
+          <button onclick="exportToCsv()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-3 py-2 rounded-lg border border-slate-600 transition flex items-center gap-1">
+            <span>📥</span> Exportar CSV (Excel)
           </button>
-          <button onclick="exportToJson()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-lg border border-slate-300 transition flex items-center gap-1">
+          <button onclick="exportToJson()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold px-3 py-2 rounded-lg border border-slate-600 transition flex items-center gap-1">
             <span>📄</span> Exportar JSON
           </button>
-          <button onclick="toggleNewModal(true)" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1">
-            <span>➕</span> Nuevo Registro
+          <button onclick="toggleNewModal(true)" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-2 rounded-lg transition flex items-center gap-1">
+            <span>➕</span> Nueva Medición
           </button>
         </div>
       </div>
 
-      <!-- Tabla / Lista de Registros -->
-      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <!-- Tabla de Mediciones y Plicometría -->
+      <div class="bg-slate-800/90 rounded-xl border border-slate-700 overflow-hidden shadow-xl">
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm">
-            <thead class="bg-slate-50 text-slate-500 uppercase text-xs border-b border-slate-200">
+            <thead class="bg-slate-900/80 text-slate-400 uppercase text-xs border-b border-slate-700">
               <tr>
-                <th class="py-3 px-4">Título</th>
-                <th class="py-3 px-4">Categoría</th>
-                <th class="py-3 px-4">Monto</th>
-                <th class="py-3 px-4">Fecha</th>
+                <th class="py-3 px-4">Fecha y Hora</th>
+                <th class="py-3 px-4">Peso</th>
+                <th class="py-3 px-4">% Grasa</th>
+                <th class="py-3 px-4">Circunferencias (cm)</th>
+                <th class="py-3 px-4">Plicometría (mm)</th>
+                <th class="py-3 px-4">Notas</th>
                 <th class="py-3 px-4 text-right">Acción</th>
               </tr>
             </thead>
-            <tbody id="records-tbody" class="divide-y divide-slate-100">
-              <!-- Se llena dinámicamente con JS -->
+            <tbody id="measurements-tbody" class="divide-y divide-slate-700/60">
+              <!-- Se llena dinámicamente con JavaScript -->
             </tbody>
           </table>
         </div>
-        <div id="no-records-msg" class="hidden text-center py-12 text-slate-400 text-sm">
-          No hay registros disponibles. ¡Crea el primero desde la app móvil o desde aquí!
+        <div id="no-records-msg" class="hidden text-center py-16 text-slate-500 text-sm">
+          No hay mediciones registradas. ¡Guarda tu primera medición desde el móvil o aquí!
         </div>
       </div>
     </section>
   </div>
 
-  <!-- MODAL NUEVO REGISTRO -->
-  <div id="new-record-modal" class="hidden fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-    <div class="bg-white max-w-md w-full rounded-2xl p-6 shadow-xl border border-slate-200">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-bold text-slate-800">Crear Nuevo Registro</h3>
-        <button onclick="toggleNewModal(false)" class="text-slate-400 hover:text-slate-600 text-xl font-bold">&times;</button>
+  <!-- MODAL NUEVA MEDICIÓN -->
+  <div id="new-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
+    <div class="bg-slate-800 max-w-2xl w-full rounded-2xl p-6 shadow-2xl border border-slate-700 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-700 pb-3">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <span>📏</span> Registrar Medidas Corporales
+        </h3>
+        <button onclick="toggleNewModal(false)" class="text-slate-400 hover:text-slate-200 text-2xl font-bold">&times;</button>
       </div>
 
-      <form onsubmit="handleCreateRecord(event)" class="space-y-3">
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Título *</label>
-          <input id="rec-title" type="text" required class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500" placeholder="Ej. Pago de servicio" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Categoría</label>
-          <select id="rec-category" class="w-full px-3 py-2 border rounded-lg text-sm bg-white">
-            <option value="General">General</option>
-            <option value="Finanzas">Finanzas</option>
-            <option value="Trabajo">Trabajo</option>
-            <option value="Personal">Personal</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Monto / Valor</label>
-          <input id="rec-amount" type="number" step="0.01" value="0.00" class="w-full px-3 py-2 border rounded-lg text-sm" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">Descripción / Notas</label>
-          <textarea id="rec-desc" rows="3" class="w-full px-3 py-2 border rounded-lg text-sm" placeholder="Detalles opcionales..."></textarea>
+      <form onsubmit="handleCreateMeasurement(event)" class="space-y-4">
+        <!-- Fila Básica: Fecha/Hora y Peso -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Fecha y Hora</label>
+            <input id="m-fecha" type="datetime-local" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100" />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Peso Corporal (kg) *</label>
+            <input id="m-peso" type="number" step="0.1" required class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-slate-100" placeholder="76.5" />
+          </div>
         </div>
 
-        <div class="flex justify-end gap-2 pt-2">
-          <button type="button" onclick="toggleNewModal(false)" class="px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">Cancelar</button>
-          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold">Guardar</button>
+        <!-- Sección Circunferencias -->
+        <div>
+          <h4 class="text-xs uppercase font-bold text-emerald-400 tracking-wider mb-2">Circunferencias Corporales (cm)</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <input id="m-cintura" type="number" step="0.5" placeholder="Cintura (cm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-pecho" type="number" step="0.5" placeholder="Pecho (cm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-cadera" type="number" step="0.5" placeholder="Cadera (cm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-cuello" type="number" step="0.5" placeholder="Cuello (cm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-biceps-d" type="number" step="0.5" placeholder="Bíceps Der" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-biceps-i" type="number" step="0.5" placeholder="Bíceps Izq" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-muslo-d" type="number" step="0.5" placeholder="Muslo Der" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-pantorrilla-d" type="number" step="0.5" placeholder="Pantorrilla Der" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+          </div>
+        </div>
+
+        <!-- Sección Plicometría -->
+        <div>
+          <h4 class="text-xs uppercase font-bold text-cyan-400 tracking-wider mb-2">Plicometría / Pliegues Cutáneos (mm)</h4>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <input id="m-triceps" type="number" step="0.5" placeholder="Tríceps (mm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-abdominal" type="number" step="0.5" placeholder="Abdominal (mm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-muslo-pliegue" type="number" step="0.5" placeholder="Muslo (mm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-pectoral" type="number" step="0.5" placeholder="Pectoral (mm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-subescapular" type="number" step="0.5" placeholder="Subescapular" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-suprailiaco" type="number" step="0.5" placeholder="Suprailíaco" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+            <input id="m-axilar" type="number" step="0.5" placeholder="Axilar (mm)" class="px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded text-xs text-slate-100" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Notas / Observaciones</label>
+          <textarea id="m-notas" rows="2" class="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-xs text-slate-100" placeholder="ej. medición en ayunas..."></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-700">
+          <button type="button" onclick="toggleNewModal(false)" class="px-4 py-2 border border-slate-600 rounded-lg text-xs font-semibold text-slate-300 hover:bg-slate-700">Cancelar</button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold">Guardar Medición</button>
         </div>
       </form>
     </div>
@@ -171,9 +193,8 @@
   <script>
     let supabaseClient = null;
     let isRegisterMode = false;
-    let allRecords = [];
+    let allMeasurements = [];
 
-    // Inicialización al cargar la página
     window.addEventListener('DOMContentLoaded', () => {
       const savedUrl = localStorage.getItem('supabase_url') || '';
       const savedKey = localStorage.getItem('supabase_key') || '';
@@ -182,6 +203,11 @@
         document.getElementById('cfg-key').value = savedKey;
         initSupabase(savedUrl, savedKey);
       }
+
+      // Prefill fecha/hora actual en modal
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('m-fecha').value = now.toISOString().slice(0,16);
     });
 
     function saveSupabaseConfig() {
@@ -204,18 +230,23 @@
       const { data: { session } } = await supabaseClient.auth.getSession();
       if (session) {
         renderLoggedIn(session.user);
-        loadRecords();
+        loadMeasurements();
       } else {
         renderLoggedOut();
       }
     }
 
+    function toInternalEmail(username) {
+      const sanitized = username.trim().toLowerCase().replace(/\s+/g, '_');
+      return `${sanitized}@appregistros.local`;
+    }
+
     function toggleAuthMode() {
       isRegisterMode = !isRegisterMode;
-      document.getElementById('auth-title').innerText = isRegisterMode ? 'Registrar Nueva Cuenta' : 'Iniciar Sesión';
-      document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'Registrarme' : 'Ingresar';
-      document.getElementById('toggle-auth-text').innerText = isRegisterMode ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?';
-      document.getElementById('toggle-auth-btn').innerText = isRegisterMode ? 'Inicia sesión aquí' : 'Regístrate aquí';
+      document.getElementById('auth-title').innerText = isRegisterMode ? 'Crear Cuenta Nueva' : 'Iniciar Sesión';
+      document.getElementById('auth-submit-btn').innerText = isRegisterMode ? 'Crear Cuenta' : 'Ingresar';
+      document.getElementById('toggle-auth-text').innerText = isRegisterMode ? '¿Ya tienes cuenta?' : '¿No tienes cuenta aún?';
+      document.getElementById('toggle-auth-btn').innerText = isRegisterMode ? 'Inicia sesión aquí' : 'Crear cuenta (sin correo)';
       hideAuthError();
     }
 
@@ -232,23 +263,23 @@
     async function handleAuthSubmit(e) {
       e.preventDefault();
       hideAuthError();
-      if (!supabaseClient) {
-        return showAuthError('Por favor ingresa primero la URL y Anon Key en el panel superior.');
-      }
-      const email = document.getElementById('auth-email').value.trim();
+      if (!supabaseClient) return showAuthError('Por favor ingresa primero la URL y Anon Key en el panel superior.');
+
+      const username = document.getElementById('auth-username').value.trim();
       const password = document.getElementById('auth-password').value;
+      const internalEmail = toInternalEmail(username);
 
       try {
         if (isRegisterMode) {
-          const { data, error } = await supabaseClient.auth.signUp({ email, password });
+          const { data, error } = await supabaseClient.auth.signUp({ email: internalEmail, password });
           if (error) throw error;
-          alert('¡Registro exitoso! Ya puedes iniciar sesión.');
+          alert('¡Cuenta creada con éxito! Ya puedes iniciar sesión.');
           toggleAuthMode();
         } else {
-          const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          const { data, error } = await supabaseClient.auth.signInWithPassword({ email: internalEmail, password });
           if (error) throw error;
           renderLoggedIn(data.user);
-          loadRecords();
+          loadMeasurements();
         }
       } catch (err) {
         showAuthError(err.message || 'Error al autenticar');
@@ -261,11 +292,12 @@
     }
 
     function renderLoggedIn(user) {
+      const username = (user.email || '').split('@')[0];
       document.getElementById('auth-box').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
       document.getElementById('user-section').classList.remove('hidden');
       document.getElementById('user-section').classList.add('flex');
-      document.getElementById('user-email').innerText = user.email;
+      document.getElementById('user-display').innerText = username;
     }
 
     function renderLoggedOut() {
@@ -275,61 +307,62 @@
       document.getElementById('user-section').classList.remove('flex');
     }
 
-    async function loadRecords() {
+    async function loadMeasurements() {
       if (!supabaseClient) return;
       const { data, error } = await supabaseClient
-        .from('registros')
+        .from('mediciones_corporales')
         .select('*')
-        .order('fecha', { ascending: false });
+        .order('fecha_hora', { ascending: false });
 
       if (error) {
         console.error(error);
         return;
       }
-      allRecords = data || [];
-      filterRecords();
+      allMeasurements = data || [];
+      renderTable(allMeasurements);
     }
 
-    function filterRecords() {
-      const q = (document.getElementById('search-input').value || '').toLowerCase();
-      const cat = document.getElementById('category-filter').value;
-
-      const filtered = allRecords.filter(r => {
-        const matchesCat = (cat === 'Todas') || (r.categoria === cat);
-        const matchesQ = !q || (r.titulo && r.titulo.toLowerCase().includes(q)) || (r.descripcion && r.descripcion.toLowerCase().includes(q));
-        return matchesCat && matchesQ;
-      });
-
-      renderRecordsTable(filtered);
-    }
-
-    function renderRecordsTable(records) {
-      const tbody = document.getElementById('records-tbody');
+    function renderTable(measurements) {
+      const tbody = document.getElementById('measurements-tbody');
       const noRecords = document.getElementById('no-records-msg');
+      document.getElementById('count-badge').innerText = measurements.length;
       tbody.innerHTML = '';
 
-      if (records.length === 0) {
+      if (measurements.length === 0) {
         noRecords.classList.remove('hidden');
         return;
       }
       noRecords.classList.add('hidden');
 
-      records.forEach(r => {
+      measurements.forEach(m => {
         const tr = document.createElement('tr');
-        tr.className = 'hover:bg-slate-50 transition';
-        const dateStr = r.fecha ? new Date(r.fecha).toLocaleDateString() : '-';
+        tr.className = 'hover:bg-slate-800/50 transition';
+        const dateStr = m.fecha_hora ? new Date(m.fecha_hora).toLocaleString() : '-';
+
+        // Resumen circunferencias
+        const cmItems = [];
+        if (m.cintura) cmItems.push(`Cintura: ${m.cintura}cm`);
+        if (m.pecho) cmItems.push(`Pecho: ${m.pecho}cm`);
+        if (m.cadera) cmItems.push(`Cadera: ${m.cadera}cm`);
+        if (m.biceps_der) cmItems.push(`Bíceps D: ${m.biceps_der}cm`);
+        const cmSummary = cmItems.length > 0 ? cmItems.join(' · ') : '-';
+
+        // Resumen plicometría
+        const plicItems = [];
+        if (m.pliegue_abdominal) plicItems.push(`Abd: ${m.pliegue_abdominal}mm`);
+        if (m.pliegue_triceps) plicItems.push(`Tri: ${m.pliegue_triceps}mm`);
+        if (m.pliegue_muslo) plicItems.push(`Mus: ${m.pliegue_muslo}mm`);
+        const plicSummary = plicItems.length > 0 ? plicItems.join(' · ') : '-';
+
         tr.innerHTML = `
-          <td class="py-3 px-4 font-semibold text-slate-800">
-            ${r.titulo}
-            ${r.descripcion ? `<p class="text-xs text-slate-400 font-normal mt-0.5 line-clamp-1">${r.descripcion}</p>` : ''}
-          </td>
-          <td class="py-3 px-4">
-            <span class="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded font-medium">${r.categoria || 'General'}</span>
-          </td>
-          <td class="py-3 px-4 font-mono font-medium text-slate-700">$${Number(r.monto || 0).toFixed(2)}</td>
-          <td class="py-3 px-4 text-xs text-slate-500">${dateStr}</td>
+          <td class="py-3 px-4 font-mono text-xs text-slate-300">${dateStr}</td>
+          <td class="py-3 px-4 font-bold text-emerald-400 text-sm">${m.peso_kg} kg</td>
+          <td class="py-3 px-4 font-semibold text-cyan-400 text-xs">${m.porcentaje_grasa ? m.porcentaje_grasa + '%' : '-'}</td>
+          <td class="py-3 px-4 text-xs text-slate-300 max-w-xs truncate">${cmSummary}</td>
+          <td class="py-3 px-4 text-xs text-slate-400 max-w-xs truncate">${plicSummary}</td>
+          <td class="py-3 px-4 text-xs text-slate-500 italic max-w-xs truncate">${m.notas || '-'}</td>
           <td class="py-3 px-4 text-right">
-            <button onclick="handleDeleteRecord('${r.id}')" class="text-red-600 hover:text-red-800 text-xs font-semibold">Borrar</button>
+            <button onclick="handleDeleteMeasurement('${m.id}')" class="text-red-400 hover:text-red-300 text-xs font-semibold">Borrar</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -337,65 +370,91 @@
     }
 
     function toggleNewModal(show) {
-      const modal = document.getElementById('new-record-modal');
+      const modal = document.getElementById('new-modal');
       if (show) modal.classList.remove('hidden');
       else modal.classList.add('hidden');
     }
 
-    async function handleCreateRecord(e) {
+    async function handleCreateMeasurement(e) {
       e.preventDefault();
       if (!supabaseClient) return;
-
-      const title = document.getElementById('rec-title').value.trim();
-      const cat = document.getElementById('rec-category').value;
-      const amount = parseFloat(document.getElementById('rec-amount').value) || 0;
-      const desc = document.getElementById('rec-desc').value.trim();
 
       const { data: { user } } = await supabaseClient.auth.getUser();
       if (!user) return alert('Debes iniciar sesión.');
 
-      const { error } = await supabaseClient.from('registros').insert([{
+      const fechaInput = document.getElementById('m-fecha').value;
+      const fechaIso = fechaInput ? new Date(fechaInput).toISOString() : new Date().toISOString();
+      const peso = parseFloat(document.getElementById('m-peso').value);
+
+      const cintura = parseFloat(document.getElementById('m-cintura').value) || null;
+      const pecho = parseFloat(document.getElementById('m-pecho').value) || null;
+      const cadera = parseFloat(document.getElementById('m-cadera').value) || null;
+      const cuello = parseFloat(document.getElementById('m-cuello').value) || null;
+      const bicepsD = parseFloat(document.getElementById('m-biceps-d').value) || null;
+      const bicepsI = parseFloat(document.getElementById('m-biceps-i').value) || null;
+      const musloD = parseFloat(document.getElementById('m-muslo-d').value) || null;
+      const pantorrillaD = parseFloat(document.getElementById('m-pantorrilla-d').value) || null;
+
+      const triceps = parseFloat(document.getElementById('m-triceps').value) || null;
+      const abdominal = parseFloat(document.getElementById('m-abdominal').value) || null;
+      const musloP = parseFloat(document.getElementById('m-muslo-pliegue').value) || null;
+      const pectoral = parseFloat(document.getElementById('m-pectoral').value) || null;
+      const subescapular = parseFloat(document.getElementById('m-subescapular').value) || null;
+      const suprailiaco = parseFloat(document.getElementById('m-suprailiaco').value) || null;
+      const axilar = parseFloat(document.getElementById('m-axilar').value) || null;
+      const notas = document.getElementById('m-notas').value.trim() || null;
+
+      // Estimación grasa Jackson-Pollock 3 pliegues si existen
+      let fat = null;
+      if (pectoral && abdominal && musloP) {
+        const sum = pectoral + abdominal + musloP;
+        const density = 1.10938 - (0.0008267 * sum) + (0.0000016 * sum * sum) - (0.0002574 * 28);
+        fat = Math.round(((495 / density) - 450) * 10) / 10;
+      }
+
+      const { error } = await supabaseClient.from('mediciones_corporales').insert([{
         user_id: user.id,
-        titulo: title,
-        categoria: cat,
-        monto: amount,
-        descripcion: desc || null
+        fecha_hora: fechaIso,
+        peso_kg: peso,
+        cintura, pecho, cadera, cuello,
+        biceps_der: bicepsD, biceps_izq: bicepsI,
+        muslo_der: musloD, pantorrilla_der: pantorrillaD,
+        pliegue_triceps: triceps, pliegue_abdominal: abdominal,
+        pliegue_muslo: musloP, pliegue_pectoral: pectoral,
+        pliegue_subescapular: subescapular, pliegue_suprailiaco: suprailiaco,
+        pliegue_axilar: axilar,
+        porcentaje_grasa: fat,
+        notas
       }]);
 
       if (error) {
         alert('Error: ' + error.message);
       } else {
         toggleNewModal(false);
-        document.getElementById('rec-title').value = '';
-        document.getElementById('rec-desc').value = '';
-        document.getElementById('rec-amount').value = '0.00';
-        loadRecords();
+        loadMeasurements();
       }
     }
 
-    async function handleDeleteRecord(id) {
-      if (!confirm('¿Seguro que deseas eliminar este registro?')) return;
-      const { error } = await supabaseClient.from('registros').delete().eq('id', id);
+    async function handleDeleteMeasurement(id) {
+      if (!confirm('¿Seguro que deseas eliminar esta medición?')) return;
+      const { error } = await supabaseClient.from('mediciones_corporales').delete().eq('id', id);
       if (error) alert('Error: ' + error.message);
-      else loadRecords();
+      else loadMeasurements();
     }
 
-    // Funciones de Portabilidad: Exportar a CSV y JSON
     function exportToCsv() {
-      if (allRecords.length === 0) return alert('No hay registros para exportar.');
-      let csv = 'ID,Titulo,Descripcion,Categoria,Monto,Fecha\n';
-      allRecords.forEach(r => {
-        const safeTitle = (r.titulo || '').replace(/"/g, '""');
-        const safeDesc = (r.descripcion || '').replace(/"/g, '""');
-        csv += `"${r.id}","${safeTitle}","${safeDesc}","${r.categoria || ''}",${r.monto || 0},"${r.fecha || ''}"\n`;
+      if (allMeasurements.length === 0) return alert('No hay mediciones para exportar.');
+      let csv = 'ID,FechaHora,PesoKg,GrasaPct,Cintura,Pecho,Cadera,Cuello,BicepsDer,MusloDer,Triceps,Abdominal,MusloPliegue,Pectoral,Notas\n';
+      allMeasurements.forEach(m => {
+        const safeNotas = (m.notas || '').replace(/"/g, '""');
+        csv += `"${m.id}","${m.fecha_hora}",${m.peso_kg},${m.porcentaje_grasa || ''},${m.cintura || ''},${m.pecho || ''},${m.cadera || ''},${m.cuello || ''},${m.biceps_der || ''},${m.muslo_der || ''},${m.pliegue_triceps || ''},${m.pliegue_abdominal || ''},${m.pliegue_muslo || ''},${m.pliegue_pectoral || ''},"${safeNotas}"\n`;
       });
-      downloadFile(csv, 'registros_exportados.csv', 'text/csv');
+      downloadFile(csv, 'mediciones_antropometria.csv', 'text/csv');
     }
 
     function exportToJson() {
-      if (allRecords.length === 0) return alert('No hay registros para exportar.');
-      const json = JSON.stringify(allRecords, null, 2);
-      downloadFile(json, 'registros_exportados.json', 'application/json');
+      if (allMeasurements.length === 0) return alert('No hay mediciones para exportar.');
+      downloadFile(JSON.stringify(allMeasurements, null, 2), 'mediciones_antropometria.json', 'application/json');
     }
 
     function downloadFile(content, fileName, mimeType) {

@@ -4,8 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -24,7 +24,7 @@ fun RegisterScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    var email by remember { mutableStateOf("") }
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var localError by remember { mutableStateOf<String?>(null) }
@@ -56,28 +56,28 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Registro Nuevo",
+                text = "Registro Rápido",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Tu cuenta te permitirá consultar tus datos en la app y en la web",
+                text = "Sin correos ni verificaciones. Solo tu usuario y clave.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp, bottom = 24.dp)
             )
 
             OutlinedTextField(
-                value = email,
+                value = username,
                 onValueChange = {
-                    email = it
+                    username = it
                     localError = null
                 },
-                label = { Text("Correo Electrónico") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                label = { Text("Nombre de Usuario") },
+                placeholder = { Text("ej. hugo_fit") },
+                leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
                 singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -130,7 +130,7 @@ fun RegisterScreen(
                     if (password != confirmPassword) {
                         localError = "Las contraseñas no coinciden"
                     } else {
-                        viewModel.signUp(email, password)
+                        viewModel.signUp(username, password)
                     }
                 },
                 enabled = !uiState.isLoading,
@@ -144,7 +144,7 @@ fun RegisterScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text("Registrarme")
+                    Text("Crear Mi Cuenta")
                 }
             }
         }

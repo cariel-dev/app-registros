@@ -12,7 +12,8 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val isAuthenticated: Boolean = false,
     val errorMessage: String? = null,
-    val userEmail: String? = null
+    val username: String? = null,
+    val userId: String? = null
 )
 
 class AuthViewModel(
@@ -27,60 +28,66 @@ class AuthViewModel(
     }
 
     fun checkSession() {
-        val currentUser = authRepository.getCurrentUser()
-        if (currentUser != null) {
+        if (authRepository.isUserLoggedIn()) {
             _uiState.value = _uiState.value.copy(
                 isAuthenticated = true,
-                userEmail = currentUser.email
+                username = authRepository.getCurrentUsername(),
+                userId = authRepository.getCurrentUserId()
             )
         }
     }
 
-    fun signIn(email: String, pass: String) {
-        if (email.isBlank() || pass.isBlank()) {
-            _uiState.value = _uiState.value.copy(errorMessage = "Por favor ingresa correo y contraseña")
+    fun signIn(username: String, pass: String) {
+        val cleanUser = username.trim()
+        if (cleanUser.isBlank() || pass.isBlank()) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Ingresa usuario y contraseña")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = authRepository.signIn(email.trim(), pass)
+            val result = authRepository.signIn(cleanUser, pass)
             result.onSuccess {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isAuthenticated = true,
-                    userEmail = email.trim()
+                    username = cleanUser,
+                    userId = authRepository.getCurrentUserId()
                 )
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = error.localizedMessage ?: "Error al iniciar sesión"
+                    errorMessage = "Credenciales incorrectas o error de conexión"
                 )
             }
         }
     }
 
-    fun signUp(email: String, pass: String) {
-        if (email.isBlank() || pass.length < 6) {
-            _uiState.value = _uiState.value.copy(
-                errorMessage = "La contraseña debe tener al menos 6 caracteres"
-            )
+    fun signUp(username: String, pass: String) {
+        val cleanUser = username.trim()
+        if (cleanUser.length < 3) {
+            _uiState.value = _uiState.value.copy(errorMessage = "El usuario debe tener al menos 3 caracteres")
+            return
+        }
+        if (pass.length < 6) {
+            _uiState.value = _uiState.value.copy(errorMessage = "La contraseña debe tener al menos 6 caracteres")
             return
         }
 
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            val result = authRepository.signUp(email.trim(), pass)
+            val result = authRepository.signUp(cleanUser, pass)
             result.onSuccess {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
                     isAuthenticated = true,
-                    userEmail = email.trim()
+                    username = cleanUser,
+                    userId = authRepository.getCurrentUserId()
                 )
             }.onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = error.localizedMessage ?: "Error al registrarse"
+                    errorMessage = error.localizedMessage ?: "No se pudo registrar el usuario"
                 )
             }
         }

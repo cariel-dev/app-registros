@@ -1,37 +1,62 @@
 -- ==============================================================================
--- SCHEMA DE BASE DE DATOS PARA APP REGISTROS (SUPABASE / POSTGRESQL)
+-- SCHEMA POSTGRESQL (SUPABASE) - APP DE MEDIDAS CORPORALES Y PLICOMETRÍA
 -- ==============================================================================
--- Este archivo contiene las tablas, índices, políticas de seguridad (RLS)
--- y vistas para la aplicación móvil y web.
---
--- Para ejecutarlo:
--- 1. Ve a tu proyecto en Supabase (https://app.supabase.com)
--- 2. Entra en "SQL Editor" -> "New query"
--- 3. Pega este contenido y presiona "Run"
+-- Diseñado siguiendo las mejores prácticas de Supabase:
+-- 1. UUIDs generados en cliente/servidor para sincronización offline sin colisiones.
+-- 2. Tipos de datos precisos: NUMERIC(5,2) para peso y cm, NUMERIC(4,1) para pliegues en mm.
+-- 3. Índices compuestos para consultas rápidas por usuario y fecha.
+-- 4. Row Level Security (RLS) estricto: cada usuario solo ve sus propias medidas.
 -- ==============================================================================
 
--- 1. EXTENSIÓN PARA GENERAR UUIDs (incluida por defecto en Postgres)
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. TABLA PRINCIPAL DE REGISTROS
-CREATE TABLE IF NOT EXISTS public.registros (
+-- TABLA PRINCIPAL: mediciones_corporales
+CREATE TABLE IF NOT EXISTS public.mediciones_corporales (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    titulo VARCHAR(255) NOT NULL,
-    descripcion TEXT,
-    categoria VARCHAR(100) DEFAULT 'General',
-    monto NUMERIC(12, 2) DEFAULT 0.00,
-    fecha TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()),
+    fecha_hora TIMESTAMPTZ NOT NULL DEFAULT TIMEZONE('utc', NOW()),
+    
+    -- Peso y notas generales
+    peso_kg NUMERIC(5,2) NOT NULL,
+    notas TEXT,
+
+    -- Circunferencias corporales (en centímetros)
+    cuello NUMERIC(5,2),
+    hombros NUMERIC(5,2),
+    pecho NUMERIC(5,2),
+    cintura NUMERIC(5,2),
+    cadera NUMERIC(5,2),
+    biceps_der NUMERIC(5,2),
+    biceps_izq NUMERIC(5,2),
+    antebrazo_der NUMERIC(5,2),
+    antebrazo_izq NUMERIC(5,2),
+    muslo_der NUMERIC(5,2),
+    muslo_izq NUMERIC(5,2),
+    pantorrilla_der NUMERIC(5,2),
+    pantorrilla_izq NUMERIC(5,2),
+
+    -- Plicometría / Pliegues cutáneos (en milímetros)
+    pliegue_triceps NUMERIC(4,1),
+    pliegue_subescapular NUMERIC(4,1),
+    pliegue_suprailiaco NUMERIC(4,1),
+    pliegue_abdominal NUMERIC(4,1),
+    pliegue_muslo NUMERIC(4,1),
+    pliegue_pectoral NUMERIC(4,1),
+    pliegue_axilar NUMERIC(4,1),
+
+    -- Estimación calculada de porcentaje de grasa corporal (%)
+    porcentaje_grasa NUMERIC(4,2),
+
+    -- Auditoría
     created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
 );
 
--- 3. ÍNDICES PARA BÚSQUEDAS RÁPIDAS Y ALTO RENDIMIENTO
-CREATE INDEX IF NOT EXISTS idx_registros_user_id ON public.registros(user_id);
-CREATE INDEX IF NOT EXISTS idx_registros_fecha ON public.registros(fecha DESC);
-CREATE INDEX IF NOT EXISTS idx_registros_categoria ON public.registros(categoria);
+-- ÍNDICES DE RENDIMIENTO (Consulta frecuente: mediciones de un usuario ordenadas por fecha)
+CREATE INDEX IF NOT EXISTS idx_mediciones_user_fecha 
+    ON public.mediciones_corporales(user_id, fecha_hora DESC);
 
--- 4. TRIGGER PARA ACTUALIZAR AUTOMÁTICAMENTE 'updated_at'
+-- TRIGGER PARA ACTUALIZAR AUTOMÁTICAMENTE 'updated_at'
 CREATE OR REPLACE FUNCTION public.handle_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -40,54 +65,55 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trigger_registros_updated_at ON public.registros;
-CREATE TRIGGER trigger_registros_updated_at
-    BEFORE UPDATE ON public.registros
+DROP TRIGGER IF EXISTS trigger_mediciones_updated_at ON public.mediciones_corporales;
+CREATE TRIGGER trigger_mediciones_updated_at
+    BEFORE UPDATE ON public.mediciones_corporales
     FOR EACH ROW
     EXECUTE FUNCTION public.handle_updated_at();
 
 -- ==============================================================================
--- 5. SEGURIDAD A NIVEL DE FILA (ROW LEVEL SECURITY - RLS)
+-- SEGURIDAD A NIVEL DE FILA (ROW LEVEL SECURITY - RLS)
 -- ==============================================================================
--- Esto garantiza que CADA USUARIO solo pueda ver, crear, modificar o borrar
--- SUS PROPIOS REGISTROS. Ningún usuario podrá espiar datos de otros.
--- ==============================================================================
+ALTER TABLE public.mediciones_corporales ENABLE ROW LEVEL SECURITY;
 
-ALTER TABLE public.registros ENABLE ROW LEVEL SECURITY;
-
--- Política de Lectura (SELECT)
-CREATE POLICY "Permitir a los usuarios consultar sus propios registros"
-    ON public.registros
+CREATE POLICY "Usuarios pueden leer únicamente sus propias mediciones"
+    ON public.mediciones_corporales
     FOR SELECT
     USING (auth.uid() = user_id);
 
--- Política de Inserción (INSERT)
-CREATE POLICY "Permitir a los usuarios insertar sus propios registros"
-    ON public.registros
+CREATE POLICY "Usuarios pueden insertar sus propias mediciones"
+    ON public.mediciones_corporales
     FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
--- Política de Actualización (UPDATE)
-CREATE POLICY "Permitir a los usuarios actualizar sus propios registros"
-    ON public.registros
+CREATE POLICY "Usuarios pueden actualizar sus propias mediciones"
+    ON public.mediciones_corporales
     FOR UPDATE
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
--- Política de Eliminación (DELETE)
-CREATE POLICY "Permitir a los usuarios borrar sus propios registros"
-    ON public.registros
+CREATE POLICY "Usuarios pueden eliminar sus propias mediciones"
+    ON public.mediciones_corporales
     FOR DELETE
     USING (auth.uid() = user_id);
 
 -- ==============================================================================
--- 6. CONSULTAS DE EJEMPLO PARA EXPORTAR DATOS FÁCILMENTE (PORTABILIDAD)
+-- TABLA DE PERFILES PARA LOGIN SENCILLO POR NOMBRE DE USUARIO
 -- ==============================================================================
--- Si en el futuro quieres extraer todos tus datos a JSON o CSV sin tocar código:
---
--- Exportar a JSON:
--- SELECT json_agg(r) FROM public.registros r WHERE user_id = auth.uid();
---
--- O directamente en el panel de Supabase:
--- Tabla 'registros' -> Botón 'Export' -> 'Download as CSV' o 'Download as JSON'.
--- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc', NOW())
+);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Lectura pública de nombres de usuario para validar disponibilidad"
+    ON public.profiles
+    FOR SELECT
+    USING (true);
+
+CREATE POLICY "Usuarios pueden insertar su propio perfil"
+    ON public.profiles
+    FOR INSERT
+    WITH CHECK (auth.uid() = id);

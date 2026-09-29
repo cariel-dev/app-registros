@@ -1,15 +1,12 @@
 package com.app.registros.ui.navigation
 
 /**
- * Rutas de navegación de la aplicación.
+ * Rutas de navegación de la aplicación de medidas corporales.
  */
 sealed class Screen(val route: String) {
     object Login : Screen("login")
     object Register : Screen("register")
-    object RecordsList : Screen("records_list")
-    object AddRecord : Screen("add_record")
-    object EditRecord : Screen("edit_record/{recordId}") {
-        fun createRoute(recordId: String) = "edit_record/$recordId"
-    }
+    object MeasurementsList : Screen("measurements_list")
+    object NewMeasurement : Screen("new_measurement")
     object Export : Screen("export")
 }

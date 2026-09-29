@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.serialization")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -78,7 +79,13 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
 
-    // Supabase Kotlin SDK (Postgrest para Base de Datos y Auth/GoTrue para Login)
+    // Room Database para almacenamiento Offline-First local en SQLite
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+
+    // Supabase Kotlin SDK
     val supabaseVersion = "2.3.0"
     implementation("io.github.jan-tennert.supabase:postgrest-kt:$supabaseVersion")
     implementation("io.github.jan-tennert.supabase:auth-kt:$supabaseVersion")
