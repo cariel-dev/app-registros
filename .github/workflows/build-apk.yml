@@ -22,10 +22,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Configurar Gradle 8.5
+      - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.5'
+          cache-disabled: true
 
       - name: Compilar APK Debug
         run: |
@@ -41,7 +42,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Crear o actualizar tag y release para descarga directa
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           gh release delete v1.0.0 --yes || true

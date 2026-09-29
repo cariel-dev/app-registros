@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.app.registros"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
@@ -85,11 +85,12 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
 
-    // Supabase Kotlin SDK
-    val supabaseVersion = "2.3.0"
-    implementation("io.github.jan-tennert.supabase:postgrest-kt:$supabaseVersion")
-    implementation("io.github.jan-tennert.supabase:auth-kt:$supabaseVersion")
-    implementation("io.github.jan-tennert.supabase:realtime-kt:$supabaseVersion")
+    // Supabase Kotlin SDK gestionado con BOM
+    val supabaseVersion = "2.5.4"
+    implementation(platform("io.github.jan-tennert.supabase:bom:$supabaseVersion"))
+    implementation("io.github.jan-tennert.supabase:postgrest-kt")
+    implementation("io.github.jan-tennert.supabase:auth-kt")
+    implementation("io.github.jan-tennert.supabase:realtime-kt")
 
     // Motor HTTP Ktor para Android
     val ktorVersion = "2.3.9"
