@@ -1,4 +1,26 @@
-# 🏋️‍♂️ App de Medidas Corporales, Peso y Plicometría (Android Nativo + Offline-First + Web)
+# 🏋️‍♂️ App de Medidas Corporales, Peso y Plicometría
+
+<div align="center">
+
+### 📲 Descarga Directa del Instalador APK (Android)
+
+[![Descargar APK](https://img.shields.io/badge/Descargar%20APK-Android%20v1.0.0-emerald?style=for-the-badge&logo=android&logoColor=white)](https://github.com/cariel-dev/app-registros/releases/latest/download/app-debug.apk)
+[![Última Versión](https://img.shields.io/github/v/release/cariel-dev/app-registros?style=for-the-badge&logo=github&color=blue)](https://github.com/cariel-dev/app-registros/releases/latest)
+[![Portal Web](https://img.shields.io/badge/Portal%20Web-GitHub%20Pages-8b5cf6?style=for-the-badge&logo=googlechrome&logoColor=white)](https://cariel-dev.github.io/app-registros/)
+
+**[👉 Haz clic aquí para descargar directamente `app-debug.apk`](https://github.com/cariel-dev/app-registros/releases/latest/download/app-debug.apk)**  
+*(Versión v1.0.0 • Peso: ~19 MB • Compatible con Android 8.0 o superior)*
+
+</div>
+
+---
+
+### 📥 Cómo instalar la app en tu teléfono Android (3 pasos):
+1. **Descarga el archivo:** Pulsa el botón de descarga anterior desde el navegador de tu celular Android.
+2. **Confirmar descarga:** Si Android muestra *"El archivo puede ser dañino"*, pulsa en **Descargar de todos modos** (aviso estándar para apps fuera de Google Play).
+3. **Instalar:** Pulsa la notificación de descarga o abre el archivo en tu carpeta *Descargas* y presiona **Instalar**. *(Si te pide permisos, activa «Permitir desde esta fuente»)*.
+
+---
 
 Aplicación móvil nativa en **Android (Kotlin + Jetpack Compose)** y portal web complementario para el seguimiento detallado de composición corporal y antropometría:
 * **Peso y Fecha/Hora exacta:** Registro preciso con marcas de tiempo.
