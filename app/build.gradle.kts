@@ -86,7 +86,7 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // Supabase Kotlin SDK gestionado con BOM
-    val supabaseVersion = "2.5.4"
+    val supabaseVersion = "3.1.4"
     implementation(platform("io.github.jan-tennert.supabase:bom:$supabaseVersion"))
     implementation("io.github.jan-tennert.supabase:postgrest-kt")
     implementation("io.github.jan-tennert.supabase:auth-kt")
