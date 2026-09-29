@@ -1,0 +1,53 @@
+name: Compilar APK Android
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Configurar Gradle 8.5
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.5'
+
+      - name: Compilar APK Debug
+        run: |
+          gradle assembleDebug --stacktrace
+
+      - name: Subir APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: AppRegistros-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publicar Release con APK descargable
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Crear o actualizar tag y release para descarga directa
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          gh release delete v1.0.0 --yes || true
+          git tag -d v1.0.0 || true
+          git push origin :refs/tags/v1.0.0 || true
+          
+          gh release create v1.0.0 app/build/outputs/apk/debug/app-debug.apk \
+            --title "App Registros v1.0.0 (APK)" \
+            --notes "Descarga directa del instalador APK para Android. Abre este enlace desde tu teléfono e instálala directamente."
